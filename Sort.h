@@ -1,48 +1,49 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
-#include <cstring>
-#include <Windows.h>
-#include<vector>
-#include<sstream>
-
+#include <iomanip>
 using namespace std;
-typedef unsigned long long LL;
-#define numfile 99
-static vector<long long> sizefile;
-static vector<int> num_line;
-
-struct BOOK 
+struct BOOK
 {
 	string id, otherData;
 };
-
-struct MinHeapNode 
+static BOOK header;
+struct MinHeapNode
 {
-
 	BOOK element;
 	int i; // index đại diện của từng chunk file
 };
 
-class MinHeap
-{
+class MinHeap {
 
-	MinHeapNode* harr;
+    MinHeapNode* harr;
 
-	int heap_size; // kích thước của MinHeap
+    int heap_size; // kích thước min heap
 
 public:
 
-	MinHeap(MinHeapNode a[], int size);
-	void MinHeapify(int);
-	MinHeapNode getMin() { return harr[0]; }
-	void replaceMin(MinHeapNode x)
-	{
-		harr[0] = x;
-		MinHeapify(0);
-	}
+    MinHeap(MinHeapNode a[], int size);
+
+    void MinHeapify(int);
+
+    MinHeapNode getMin() { return harr[0]; }
+
+    void replaceMin(MinHeapNode x)
+    {
+        harr[0] = x;
+        MinHeapify(0);
+    }
+
+    ~MinHeap()
+    {
+        delete[] harr;
+    }
 };
+
+// Hoán đổi hai node của MinHeap
+void swap(MinHeapNode* x, MinHeapNode* y);
 
 // Overloading toán tử >>
 istream& operator>>(std::istream& input, BOOK& book);
@@ -50,22 +51,20 @@ istream& operator>>(std::istream& input, BOOK& book);
 // Overloading toán tử <<
 ofstream& operator<<(std::ofstream& output, BOOK& book);
 
-void swap(MinHeapNode* x, MinHeapNode* y);
-
-LL GetFileLength(const string& filepath);
-
+//Hoán đổi hai dữ liệu BOOK
 void swap(BOOK& a, BOOK& b);
 
+//Chọn phần tử làm vách ngăn cho thuật toán QuickSort3
 void partition(BOOK a[], int l, int r, int& begin, int& end);
 
+//Sắp xếp các quyển sách theo ID
 void quicksort3(BOOK a[], int l, int r);
 
-void splitBigFile(const string& filepath, const char* namefile, LL blockSize);
+// Gộp các file đã sắp xếp, file sau khi gộp lại vẫn là file đã sắp xếp
+void mergeFiles(char* output_file, int k);
 
-// Merge num_ways = 10 file lại
-void mergeFiles(char* output_file, string fname, string typefile, int k);
-
-// Cắt và sort từng file
+// Chia file và sắp xếp từng file
 void SplitAndSort(char* input_file, int run_size, int num_ways);
 
-void FileSorting(char* input_file, string fname, string typefile, char* output_file, int num_ways, int run_size);
+//Sắp xếp dữ liệu của file
+void FileSorting(char* input_file, char* output_file, int num_ways, int run_size);

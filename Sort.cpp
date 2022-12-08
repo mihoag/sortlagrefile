@@ -1,25 +1,4 @@
 ﻿#include"Sort.h"
-
-istream& operator>>(std::istream& input, BOOK& book)
-{
-	getline(input, book.id, ',');
-	getline(input, book.otherData);
-	return input;
-}
-ofstream& operator<<(std::ofstream& output, BOOK& book)
-{
-	stringstream ss;
-	ss << book.id + "," + book.otherData + "\n";
-	output << ss.str();
-	return output;
-}
-
-void swap(MinHeapNode* x, MinHeapNode* y)
-{
-	MinHeapNode temp = *x;
-	*x = *y;
-	*y = temp;
-}
 MinHeap::MinHeap(MinHeapNode a[], int size)
 {
 	heap_size = size;
@@ -54,19 +33,22 @@ void MinHeap::MinHeapify(int i)
 		}
 	}
 }
-LL GetFileLength(const string& filepath)
+void swap(MinHeapNode* x, MinHeapNode* y)
 {
-	LL len = -1;
-	ifstream in;
-	in.open(filepath, ios_base::in);
-	if (in.is_open())
-	{
-		in.seekg(0, ios::end);
-		len = in.tellg();
-		in.close();
-	}
-
-	return len;
+	MinHeapNode temp = *x;
+	*x = *y;
+	*y = temp;
+}
+istream& operator>>(std::istream& input, BOOK& book)
+{
+	getline(input, book.id, ',');
+	getline(input, book.otherData);
+	return input;
+}
+ofstream& operator<<(std::ofstream& output, BOOK& book)
+{
+	output << book.id + "," + book.otherData + "\n";
+	return output;
 }
 void swap(BOOK& a, BOOK& b)
 {
@@ -78,26 +60,29 @@ void partition(BOOK a[], int l, int r, int& begin, int& end) // Choose the last 
 {
 	int mid = (l + r) / 2;
 	swap(a[mid], a[r]); // Tạo tính ngẫu nhiên khi lấy phần tử cuối
+
 	string pivotValue = a[r].id;
 	int i = l, j = r - 1;
-	while (true)
-	{ // tách thành |nhỏ hơn| và |lớn hơn hoặc bằng pivot value|
-		while (a[i].id < pivotValue)
-			i++;
-		while (a[j].id >= pivotValue)
-		{
+
+	while (true) { // tách thành |nhỏ hơn| và |lớn hơn hoặc bằng pivot value|
+		while (a[i].id < pivotValue) i++;
+
+		while (a[j].id >= pivotValue) {
 			j--;
 			if (j <= l) break;
 		}
+
 		if (i >= j) break;
 		swap(a[i], a[j]);
 	}
+
 	swap(a[r], a[i]);
-	begin = i; // index của phần tử đầu tiên trong mảng = pivot value
+
+	begin = i;
 	i++;
 	j = r;
 
-	while (true) { // Đưa những phần tử = pivot value vào ngay sau nó
+	while (true) {
 		while (a[j].id > pivotValue) {
 			j--;
 			if (j <= i) break;
@@ -110,7 +95,7 @@ void partition(BOOK a[], int l, int r, int& begin, int& end) // Choose the last 
 		i++;
 	}
 
-	end = j - 1; // index của phần tử cuối cùng trong mảng = pivot value
+	end = j - 1;
 
 }
 void quicksort3(BOOK a[], int l, int r)
@@ -126,73 +111,23 @@ void quicksort3(BOOK a[], int l, int r)
 		quicksort3(a, l, begin - 1);
 	}
 }
-void splitBigFile(const string& filepath, const char* namefile, LL blockSize)
-{
-	LL ori_size = GetFileLength(filepath);
-	blockSize *= 1024; //KB -> B
-	if (ori_size == -1)
-	{
-		cout << "get file length failed." << endl;
-		return;
-	}
-	ifstream in;
-	in.open(filepath, ios_base::in | ios_base::binary);
-	if (!in.is_open())
-	{
-		cout << "ifstream open failed" << endl;
-		return;
-	}
-
-	LL read_count = 0;
-	LL cur_count = 0;
-	int i;
-	BOOK book;
-	for (i = 0; read_count < ori_size && i <= numfile; ++i)
-	{
-		int thisTimesRead = 0;
-		string divfile = namefile + to_string(i) + ".csv";
-		cout << "spliting file: " << divfile << ".." << endl;
-		ofstream out;
-		out.open(divfile, ios_base::out | ios_base::binary);
-		if (!out.is_open())
-		{
-			cout << "open " << divfile << " failed." << endl;
-			break;
-		}
-
-		int lines = 0;
-		while (thisTimesRead < blockSize && read_count < ori_size)
-		{
-			if (!(in >> book))
-				break;
-			cur_count = book.id.length() + book.otherData.length();
-			read_count += cur_count;
-			thisTimesRead += cur_count;
-			out << book;
-			lines++;
-		}
-		num_line.push_back(lines);
-		sizefile.push_back(thisTimesRead);
-		out.close();
-	}
-
-	in.close();
-	cout << "Split " << i << " files, original file size: " << ori_size << "Bytes." << endl;
-}
-void mergeFiles(char* output_file, string fname, string typefile, int k)
+void mergeFiles(char* output_file, int k)
 {
 	ifstream* in = new ifstream[k];
 
 	// Mở k = num_ways files để merge 
 	for (int i = 0; i < k; i++) {
-		string fileName = fname + to_string(i) + typefile;
-		in[i].open(fileName, ios_base::out | ios_base::binary);
+		string fileName = to_string(i);
+		in[i].open(fileName, ios_base::in | ios_base::binary);
 	}
 
 
 	// Tạo file output kết quả 
 	ofstream out;
 	out.open(output_file, ios_base::out | ios_base::binary);
+
+	//Ghi header vào file output
+	out << header;
 
 	// Tạo mảng là cây heap lưu trữ phần tử đầu (nhỏ nhất) của mỗi files và index đại diện cho file đó
 	MinHeapNode* nodeArr = new MinHeapNode[k];
@@ -237,9 +172,12 @@ void SplitAndSort(char* input_file, int run_size, int num_ways)
 {
 	// Đọc file input là Book-rating
 	ifstream in;
-	in.open(input_file, ios_base::out | ios_base::binary);
+	in.open(input_file, ios_base::in | ios_base::binary);
 
-	// Tạo num_ways = 10 files để ghi data sau khi sort vào
+	//Đọc header
+	in >> header;
+
+	// Tạo num_ways = 100 files để ghi data sau khi sort vào
 	ofstream* out = new ofstream[num_ways];
 	for (int i = 0; i < num_ways; i++) {
 		string fileName = to_string(i);
@@ -248,7 +186,7 @@ void SplitAndSort(char* input_file, int run_size, int num_ways)
 		out[i].open(fileName, ios_base::out | ios_base::binary);
 	}
 
-	// Cấp phát bộ nhớ để đọc run_size = 3003 dòng
+	// Cấp phát bộ nhớ để đọc run_size = 30001 dòng
 	BOOK* arr = new BOOK[run_size];
 
 	bool more_input = true;
@@ -256,7 +194,7 @@ void SplitAndSort(char* input_file, int run_size, int num_ways)
 
 	int i;
 	while (more_input) {
-		// Đọc run_size = 3001 dòng vào mảng để sort
+		// Đọc run_size = 30001 dòng vào mảng để sort
 		for (i = 0; i < run_size; i++) {
 			if (!(in >> arr[i])) {
 				more_input = false;
@@ -264,12 +202,14 @@ void SplitAndSort(char* input_file, int run_size, int num_ways)
 			}
 		}
 
-		// Sort run_size = 3001 dòng vừa đọc được từ file Book-rating
+		// Sort run_size = 30001 dòng vừa đọc được từ file Book-rating
 		quicksort3(arr, 0, i - 1);
 
 		// Ghi dữ liệu vừa sort được vào file
 		for (int j = 0; j < i; j++) {
-			out[next_output_file] << arr[j];
+			if (next_output_file < num_ways) {
+				out[next_output_file] << arr[j];
+			}
 		}
 
 		next_output_file++;
@@ -282,11 +222,11 @@ void SplitAndSort(char* input_file, int run_size, int num_ways)
 	in.close();
 
 	delete[] out;
+	delete[] arr;
 }
-void FileSorting(char* input_file, string fname, string typefile, char* output_file, int num_ways, int run_size)
+void FileSorting(char* input_file, char* output_file, int num_ways, int run_size)
 {
 	SplitAndSort(input_file, run_size, num_ways);
-	mergeFiles(output_file, fname, typefile, num_ways);
+
+	mergeFiles(output_file, num_ways);
 }
-
-
